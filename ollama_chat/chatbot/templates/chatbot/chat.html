@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Ollama</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Add some simple styling */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #response_area {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eef;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <h2>Chat with Ollama</h2>
+        
+        <!-- Chat form -->
+        <form id="chat-form" method="POST">
+            {% csrf_token %}
+            <textarea id="user_input" placeholder="Enter your message..." rows="4" cols="50"></textarea>
+            <button type="button" id="send_button">Send</button>
+        </form>
+
+        <!-- Display response -->
+        <div id="response_area"></div>
+    </div>
+
+    <script>
+        // JavaScript to handle form submission and chat interaction
+        const inputField = document.getElementById("user_input");
+        const sendButton = document.getElementById("send_button");
+        const responseArea = document.getElementById("response_area");
+
+        sendButton.addEventListener("click", function() {
+            const userInput = inputField.value;
+
+            if (!userInput.trim()) {
+                alert("Please enter a message.");
+                return;
+            }
+
+            // Get CSRF token from the hidden form field
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('/chat/', {
+                method: 'POST',
+                body: new URLSearchParams({ 'user_input': userInput }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken,  // Include CSRF token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    // Display the response from the server
+                    responseArea.innerHTML = `<p>Response: ${data.response}</p>`;
+                } else if (data.error) {
+                    alert(data.error);  // Display error if any
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+
+</body>
+</html>
